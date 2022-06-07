@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace BookStore.Properties
+namespace Football.Properties
 {
 
 

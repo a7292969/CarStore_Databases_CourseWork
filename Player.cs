@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BookStore
+namespace Football
 {
-    internal class Author
+    internal class Player
     {
         public int id;
         public String name;
 
-        public Author(int id, String name)
+        public Player(int id, String name)
         {
             this.id = id;
             this.name = name;

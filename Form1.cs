@@ -9,12 +9,13 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Npgsql;
 
-namespace BookStore
+namespace Football
 {
     public partial class Form1 : Form
     {
         NpgsqlConnection conn;
-        List<Author> authors;
+        List<Stadium> stadiums;
+        List<Match> matches;
 
         public Form1()
         {
@@ -25,224 +26,235 @@ namespace BookStore
         {
             // TODO: set localhost
 
-            var connString = "Host=192.168.1.104;Username=postgres;Password=admin;Database=book-store";
+            var connString = "Host=192.168.1.104;Username=postgres;Password=admin;Database=football";
             conn = new NpgsqlConnection(connString);
             conn.Open();
 
-            updateUsersUI();
-            updateBooksUI();
-            updateAuthorsUI();
+            updatePlayersUI();
+            updateMatchesUI();
+            updateStadiumsUI();
             proceduresCB.SelectedIndex = 0;
         }
 
-        private void usersLB_SelectedIndexChanged(object sender, EventArgs e)
+        private void playersLB_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (usersLB.SelectedIndex != -1)
+            if (playersLB.SelectedIndex != -1)
             {
-                var user = (User)usersLB.SelectedItem;
-                editUserNameTB.Text = user.name;
-                editUserPhoneTB.Text = user.phone;
-                editUserAddressTB.Text = user.address;
-                updateUserBooksUI();
+                var player = (Player)playersLB.SelectedItem;
+                editPlayerNameTB.Text = player.name;
+                updatePlayerPositionsUI();
             }
-            deleteUserB.Enabled = usersLB.SelectedIndex != -1;
-            saveUserB.Enabled = usersLB.SelectedIndex != -1;
-            addBoughtBookB.Enabled = usersLB.SelectedIndex != -1;
+            deletePlayerB.Enabled = playersLB.SelectedIndex != -1;
+            savePlayerB.Enabled = playersLB.SelectedIndex != -1;
+            addPlayerPositionB.Enabled = playersLB.SelectedIndex != -1;
         }
 
-        private void addUserB_Click(object sender, EventArgs e)
+        private void addPlayerB_Click(object sender, EventArgs e)
         {
-            var name = addUserNameTB.Text;
-            var phone = addUserPhoneTB.Text;
-            var address = addUserAddressTB.Text;
-            var cmd = new NpgsqlCommand($"INSERT INTO users (name,phone,address) VALUES('{name}','{phone}','{address}')", conn);
+            var name = addPlayerNameTB.Text;
+            var cmd = new NpgsqlCommand($"INSERT INTO player (name) VALUES('{name}')", conn);
             cmd.ExecuteNonQuery();
-            updateUsersUI();
+            updatePlayersUI();
         }
 
-        private void saveUserB_Click(object sender, EventArgs e)
+        private void savePlayerB_Click(object sender, EventArgs e)
         {
-            var user = (User)usersLB.SelectedItem;
-            var name = editUserNameTB.Text;
-            var phone = editUserPhoneTB.Text;
-            var address = editUserAddressTB.Text;
-            var cmd = new NpgsqlCommand($"UPDATE users SET name='{name}',phone='{phone}',address='{address}' WHERE id = {user.id}", conn);
+            var player = (Player)playersLB.SelectedItem;
+            var name = editPlayerNameTB.Text;
+            var cmd = new NpgsqlCommand($"UPDATE player SET name='{name}' WHERE id = {player.id}", conn);
             cmd.ExecuteNonQuery();
-            updateUsersUI();
+            updatePlayersUI();
         }
 
-        private void deleteUserB_Click(object sender, EventArgs e)
+        private void deletePlayerB_Click(object sender, EventArgs e)
         {
-            if (usersLB.SelectedIndex != -1)
+            if (playersLB.SelectedIndex != -1)
             {
-                var user = (User)usersLB.SelectedItem;
+                var user = (Player)playersLB.SelectedItem;
                 var cmd = new NpgsqlCommand($"DELETE FROM users WHERE id = {user.id}", conn);
                 cmd.ExecuteNonQuery();
-                updateUsersUI();
+                updatePlayersUI();
             }
         }
 
-        private void addBoughtBookB_Click(object sender, EventArgs e)
+        private void playerPositionsLB_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var user = (User)usersLB.SelectedItem;
-            var book = (Book)addBoughtBookCB.SelectedItem;
-            var cmd = new NpgsqlCommand($"INSERT INTO bought_books (user_id, book_id) VALUES({user.id}, {book.id})", conn);
+            deletePlayerPositionB.Enabled = playerPositionsLB.SelectedIndex != -1;
+        }
+
+        private void addPlayerPositionB_Click(object sender, EventArgs e)
+        {
+            var player = (Player)playersLB.SelectedItem;
+            var match = (Match)addPlayerPositionMatchCB.SelectedItem;
+            var position = addPlayerPositionNameTB.Text;
+            var cmd = new NpgsqlCommand($"INSERT INTO positions (player_id, match_id, position) VALUES({player.id}, {match.id}, '{position}')", conn);
             try
             {
                 cmd.ExecuteNonQuery();
             }
             catch (PostgresException)
             {
-                MessageBox.Show("Ця книга вже куплена.", "Помилка");
+                MessageBox.Show("Ця позиція вже існує.", "Помилка");
             }
 
-            updateUserBooksUI();
+            updatePlayerPositionsUI();
+        }
+        
+        private void deletePlayerPositionB_Click(object sender, EventArgs e)
+        {
+            var position = (Position)playerPositionsLB.SelectedItem;
+            var cmd = new NpgsqlCommand($"DELETE FROM positions WHERE player_id = {position.playerId} AND match_id={position.match.id}", conn);
+            cmd.ExecuteNonQuery();
+            updatePlayerPositionsUI();
         }
 
-        private void authorsLB_SelectedIndexChanged(object sender, EventArgs e)
+        private void stadiumsLB_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (authorsLB.SelectedIndex != -1)
+            if (statiumsLB.SelectedIndex != -1)
             {
-                var author = (Author)authorsLB.SelectedItem;
-                editAuthorNameTB.Text = author.name;
+                var author = (Stadium)statiumsLB.SelectedItem;
+                editStadiumNameTB.Text = author.name;
             }
-            deleteAuthorB.Enabled = authorsLB.SelectedIndex != -1;
-            saveAuthorB.Enabled = authorsLB.SelectedIndex != -1;
+            deleteStadiumB.Enabled = statiumsLB.SelectedIndex != -1;
+            saveStadiumB.Enabled = statiumsLB.SelectedIndex != -1;
         }
 
-        private void addAuthorB_Click(object sender, EventArgs e)
+        private void addStadiumB_Click(object sender, EventArgs e)
         {
-            var name = addAuthorNameTB.Text;
-            var cmd = new NpgsqlCommand($"INSERT INTO author (name) VALUES('{name}')", conn);
+            var name = addStadiumNameTB.Text;
+            var cmd = new NpgsqlCommand($"INSERT INTO stadium (name) VALUES('{name}')", conn);
             cmd.ExecuteNonQuery();
-            updateAuthorsUI();
+            updateStadiumsUI();
         }
 
-        private void saveAuthorB_Click(object sender, EventArgs e)
+        private void saveStadiumB_Click(object sender, EventArgs e)
         {
-            var author = (Author)authorsLB.SelectedItem;
-            var name = editAuthorNameTB.Text;
-            var cmd = new NpgsqlCommand($"UPDATE author SET name='{name}' WHERE id = {author.id}", conn);
+            var stadium = (Stadium)statiumsLB.SelectedItem;
+            var name = editStadiumNameTB.Text;
+            var cmd = new NpgsqlCommand($"UPDATE stadium SET name='{name}' WHERE id = {stadium.id}", conn);
             cmd.ExecuteNonQuery();
-            updateAuthorsUI();
+            updateStadiumsUI();
         }
 
-        private void deleteAuthorB_Click(object sender, EventArgs e)
+        private void deleteStadiumB_Click(object sender, EventArgs e)
         {
-            if (authorsLB.SelectedIndex != -1)
+            if (statiumsLB.SelectedIndex != -1)
             {
-                var author = (Author)authorsLB.SelectedItem;
-                var cmd = new NpgsqlCommand($"DELETE FROM author WHERE id = {author.id}", conn);
+                var stadium = (Stadium)statiumsLB.SelectedItem;
+                var cmd = new NpgsqlCommand($"DELETE FROM stadium WHERE id = {stadium.id}", conn);
                 cmd.ExecuteNonQuery();
-                updateAuthorsUI();
-                updateBooksUI();
+                updateStadiumsUI();
+                updateMatchesUI();
             }
         }
 
-        private void booksLB_SelectedIndexChanged(object sender, EventArgs e)
+        private void matchesLB_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (booksLB.SelectedIndex != -1)
+            if (matchesLB.SelectedIndex != -1)
             {
-                var book = (Book)booksLB.SelectedItem;
-                editBookNameTB.Text = book.name;
-                editBookAuthorCB.SelectedIndex = authors.FindIndex((v) => v.id == book.author_id);
+                var match = (Match)matchesLB.SelectedItem;
+                editMatchTeam1TB.Text = match.team1;
+                editMatchTeam2TB.Text = match.team2;
+                editMatchStadiumCB.SelectedIndex = stadiums.FindIndex((v) => v.id == match.stadium_id);
             }
-            deleteBookB.Enabled = booksLB.SelectedIndex != -1;
-            saveBookB.Enabled = booksLB.SelectedIndex != -1;
+            deleteMatchB.Enabled = matchesLB.SelectedIndex != -1;
+            saveMatchB.Enabled = matchesLB.SelectedIndex != -1;
         }
 
-        private void addBookB_Click(object sender, EventArgs e)
+        private void addMatchB_Click(object sender, EventArgs e)
         {
-            var name = addBookNameTB.Text;
-            var author = (Author)addBook_AuthorCB.SelectedItem;
-            var cmd = new NpgsqlCommand($"INSERT INTO book (name, author_id) VALUES('{name}', {author.id})", conn);
+            var team1 = addMatchTeam1TB.Text;
+            var team2 = addMatchTeam2TB.Text;
+            var stadium = (Stadium)addMatchStadiumCB.SelectedItem;
+            var cmd = new NpgsqlCommand($"INSERT INTO match (team1, team2, stadium_id) VALUES('{team1}', '{team2}', {stadium.id})", conn);
             cmd.ExecuteNonQuery();
-            updateBooksUI();
+            updateMatchesUI();
         }
 
-        private void deleteBookB_Click(object sender, EventArgs e)
+        private void deleteMatchB_Click(object sender, EventArgs e)
         {
-            if (booksLB.SelectedIndex != -1)
+            if (matchesLB.SelectedIndex != -1)
             {
-                var book = (Book)booksLB.SelectedItem;
-                var cmd = new NpgsqlCommand($"DELETE FROM book WHERE id = {book.id}", conn);
+                var match = (Match)matchesLB.SelectedItem;
+                var cmd = new NpgsqlCommand($"DELETE FROM match WHERE id = {match.id}", conn);
                 cmd.ExecuteNonQuery();
-                updateBooksUI();
-                updateUserBooksUI();
+                updateMatchesUI();
+                updatePlayerPositionsUI();
             }
         }
 
-        private void saveBookB_Click(object sender, EventArgs e)
+        private void saveMatchB_Click(object sender, EventArgs e)
         {
-            var book = (Book)booksLB.SelectedItem;
-            var name = editBookNameTB.Text;
-            var author = (Author)editBookAuthorCB.SelectedItem;
-            var cmd = new NpgsqlCommand($"UPDATE book SET name='{name}', author_id={author.id} WHERE id = {book.id}", conn);
+            var match = (Match)matchesLB.SelectedItem;
+            var team1 = editMatchTeam1TB.Text;
+            var team2 = editMatchTeam2TB.Text;
+            var stadium = (Stadium)editMatchStadiumCB.SelectedItem;
+            var cmd = new NpgsqlCommand($"UPDATE match SET team1='{team1}', team2='{team2}', stadium_id={stadium.id} WHERE id = {match.id}", conn);
             cmd.ExecuteNonQuery();
-            updateBooksUI();
+            updateMatchesUI();
         }
+
         private void callProcedureB_Click(object sender, EventArgs e)
         {
             var procName = proceduresCB.SelectedItem.ToString();
             var cmd = new NpgsqlCommand($"CALL {procName}()", conn);
             cmd.ExecuteNonQuery();
-            updateUsersUI();
-            updateUserBooksUI();
-            updateBooksUI();
-            updateAuthorsUI();
+            updatePlayersUI();
+            updatePlayerPositionsUI();
+            updateMatchesUI();
+            updateStadiumsUI();
         }
 
-
-        void updateBooksUI()
+        void updateMatchesUI()
         {
-            var books = loadBooks();
+            matches = loadMatches();
 
-            var selectedBookId = ((Book)booksLB.SelectedItem)?.id ?? -1;
-            booksLB.Items.Clear();
-            booksLB.Items.AddRange(books.ToArray());
-            booksLB.SelectedIndex = books.FindIndex((v) => v.id == selectedBookId);
-            deleteBookB.Enabled = booksLB.SelectedIndex != -1;
-            saveBookB.Enabled = booksLB.SelectedIndex != -1;
+            var selectedMatchId = ((Match)matchesLB.SelectedItem)?.id ?? -1;
+            matchesLB.Items.Clear();
+            matchesLB.Items.AddRange(matches.ToArray());
+            matchesLB.SelectedIndex = matches.FindIndex((v) => v.id == selectedMatchId);
+            deleteMatchB.Enabled = matchesLB.SelectedIndex != -1;
+            saveMatchB.Enabled = matchesLB.SelectedIndex != -1;
 
-            addBoughtBookCB.Items.Clear();
-            addBoughtBookCB.Items.AddRange(books.ToArray());
-            addBoughtBookCB.SelectedIndex = addBoughtBookCB.Items.Count > 0 ? 0 : -1;
+            addPlayerPositionMatchCB.Items.Clear();
+            addPlayerPositionMatchCB.Items.AddRange(matches.ToArray());
+            addPlayerPositionMatchCB.SelectedIndex = addPlayerPositionMatchCB.Items.Count > 0 ? 0 : -1;
         }
 
-        void updateAuthorsUI()
+        void updateStadiumsUI()
         {
-            authors = loadAuthors();
+            stadiums = loadStadiums();
 
-            var selectedAuthorId = ((Author)authorsLB.SelectedItem)?.id ?? -1;
-            authorsLB.Items.Clear();
-            authorsLB.Items.AddRange(authors.ToArray());
-            authorsLB.SelectedIndex = authors.FindIndex((v) => v.id == selectedAuthorId);
-            deleteAuthorB.Enabled = authorsLB.SelectedIndex != -1;
-            saveAuthorB.Enabled = authorsLB.SelectedIndex != -1;
+            var selectedStadiumId = ((Stadium)statiumsLB.SelectedItem)?.id ?? -1;
+            statiumsLB.Items.Clear();
+            statiumsLB.Items.AddRange(stadiums.ToArray());
+            statiumsLB.SelectedIndex = stadiums.FindIndex((v) => v.id == selectedStadiumId);
+            deleteStadiumB.Enabled = statiumsLB.SelectedIndex != -1;
+            saveStadiumB.Enabled = statiumsLB.SelectedIndex != -1;
 
-            editBookAuthorCB.Items.Clear();
-            editBookAuthorCB.Items.AddRange(authors.ToArray());
-            editBookAuthorCB.SelectedIndex = editBookAuthorCB.Items.Count > 0 ? 0 : -1;
+            editMatchStadiumCB.Items.Clear();
+            editMatchStadiumCB.Items.AddRange(stadiums.ToArray());
+            editMatchStadiumCB.SelectedIndex = editMatchStadiumCB.Items.Count > 0 ? 0 : -1;
 
-            addBook_AuthorCB.Items.Clear();
-            addBook_AuthorCB.Items.AddRange(authors.ToArray());
-            addBook_AuthorCB.SelectedIndex = addBook_AuthorCB.Items.Count > 0 ? 0 : -1;
+            addMatchStadiumCB.Items.Clear();
+            addMatchStadiumCB.Items.AddRange(stadiums.ToArray());
+            addMatchStadiumCB.SelectedIndex = addMatchStadiumCB.Items.Count > 0 ? 0 : -1;
         }
 
-        void updateUsersUI()
+        void updatePlayersUI()
         {
-            var selected = (User)usersLB.SelectedItem;
+            var selected = (Player)playersLB.SelectedItem;
             int selectedIndex = -1;
             int i = 0;
 
-            var cmd = new NpgsqlCommand("SELECT * FROM users", conn);
+            var cmd = new NpgsqlCommand("SELECT * FROM player", conn);
             var reader = cmd.ExecuteReader();
-            usersLB.Items.Clear();
+            playersLB.Items.Clear();
 
             while (reader.Read())
             {
                 var id = reader.GetInt32(0);
-                usersLB.Items.Add(new User(id, reader.GetString(1), reader.GetString(2), reader.GetString(3)));
+                playersLB.Items.Add(new Player(id, reader.GetString(1)));
 
                 if (selected != null && selected.id == id)
                 {
@@ -252,51 +264,53 @@ namespace BookStore
             }
             reader.Close();
 
-            usersLB.SelectedIndex = selectedIndex;
-            deleteUserB.Enabled = usersLB.SelectedIndex != -1;
-            saveUserB.Enabled = usersLB.SelectedIndex != -1;
-            addBoughtBookB.Enabled = usersLB.SelectedIndex != -1;
+            playersLB.SelectedIndex = selectedIndex;
+            deletePlayerB.Enabled = playersLB.SelectedIndex != -1;
+            savePlayerB.Enabled = playersLB.SelectedIndex != -1;
+            addPlayerPositionB.Enabled = playersLB.SelectedIndex != -1;
         }
 
-        List<Author> loadAuthors()
+        List<Stadium> loadStadiums()
         {
-            var authors = new List<Author>();
-            var cmd = new NpgsqlCommand($"SELECT * FROM author", conn);
+            var stadiums = new List<Stadium>();
+            var cmd = new NpgsqlCommand($"SELECT * FROM stadium", conn);
             var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                authors.Add(new Author(reader.GetInt32(0), reader.GetString(1)));
+                stadiums.Add(new Stadium(reader.GetInt32(0), reader.GetString(1)));
             }
             reader.Close();
-            return authors;
+            return stadiums;
         }
 
-        List<Book> loadBooks()
+        List<Match> loadMatches()
         {
-            var books = new List<Book>();
-            var cmd = new NpgsqlCommand($"SELECT * FROM book", conn);
+            var matches = new List<Match>();
+            var cmd = new NpgsqlCommand($"SELECT * FROM match", conn);
             var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                books.Add(new Book(reader.GetInt32(0), reader.GetString(1), reader.GetInt32(2)));
+                matches.Add(new Match(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetInt32(3)));
             }
             reader.Close();
-            return books;
+            return matches;
         }
 
-        void updateUserBooksUI()
+        void updatePlayerPositionsUI()
         {
-            userBooksLB.Items.Clear();
-            User user = (User)usersLB.SelectedItem;
+            playerPositionsLB.Items.Clear();
+            Player player = (Player)playersLB.SelectedItem;
 
-            if (user != null)
+            if (player != null)
             {
-                var cmd = new NpgsqlCommand($"SELECT * FROM book b JOIN bought_books bb ON bb.book_id = b.id AND bb.user_id = {user.id}", conn);
+                var cmd = new NpgsqlCommand($"SELECT * FROM positions WHERE player_id = {player.id}", conn);
                 var reader = cmd.ExecuteReader();
 
                 while (reader.Read())
                 {
-                    userBooksLB.Items.Add(new Book(reader.GetInt32(0), reader.GetString(1), reader.GetInt32(2)));
+                    var match_id = reader.GetInt32(1);
+                    var match = matches.Find((v) => v.id == match_id);
+                    playerPositionsLB.Items.Add(new Position(reader.GetInt32(0), match, reader.GetString(2)));
                 }
                 reader.Close();
             }
