@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{386B1769-47C7-4F30-B2B3-82746FDA7C2E}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>Football</RootNamespace>
-    <AssemblyName>Football</AssemblyName>
+    <RootNamespace>CarStore</RootNamespace>
+    <AssemblyName>CarStore</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -77,9 +77,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Position.cs" />
-    <Compile Include="Stadium.cs" />
-    <Compile Include="Match.cs" />
+    <Compile Include="BoughtCar.cs" />
+    <Compile Include="Manufacturer.cs" />
+    <Compile Include="Car.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -88,7 +88,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Player.cs" />
+    <Compile Include="Customer.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

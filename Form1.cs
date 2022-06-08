@@ -9,13 +9,13 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Npgsql;
 
-namespace Football
+namespace CarStore
 {
     public partial class Form1 : Form
     {
         NpgsqlConnection conn;
-        List<Stadium> stadiums;
-        List<Match> matches;
+        List<Manufacturer> manufacturers;
+        List<Car> cars;
 
         public Form1()
         {
@@ -26,172 +26,175 @@ namespace Football
         {
             // TODO: set localhost
 
-            var connString = "Host=192.168.1.104;Username=postgres;Password=admin;Database=football";
+            var connString = "Host=192.168.1.104;Username=postgres;Password=admin;Database=car-store";
             conn = new NpgsqlConnection(connString);
             conn.Open();
 
-            updatePlayersUI();
-            updateMatchesUI();
-            updateStadiumsUI();
+            updateCustomersUI();
+            updateCarsUI();
+            updateManufacturersUI();
             proceduresCB.SelectedIndex = 0;
         }
 
-        private void playersLB_SelectedIndexChanged(object sender, EventArgs e)
+        private void customersLB_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (playersLB.SelectedIndex != -1)
+            if (customersLB.SelectedIndex != -1)
             {
-                var player = (Player)playersLB.SelectedItem;
-                editPlayerNameTB.Text = player.name;
-                updatePlayerPositionsUI();
+                var customer = (Customer)customersLB.SelectedItem;
+                editCustomerNameTB.Text = customer.name;
+                editCustomerPhoneTB.Text = customer.phone;
+                editCustomerAddressTB.Text = customer.address;
+                updateCustomerBoughtCarsUI();
             }
-            deletePlayerB.Enabled = playersLB.SelectedIndex != -1;
-            savePlayerB.Enabled = playersLB.SelectedIndex != -1;
-            addPlayerPositionB.Enabled = playersLB.SelectedIndex != -1;
+            deleteCustomerB.Enabled = customersLB.SelectedIndex != -1;
+            saveCustomerB.Enabled = customersLB.SelectedIndex != -1;
+            addCustomerBoughtCarB.Enabled = customersLB.SelectedIndex != -1;
         }
 
-        private void addPlayerB_Click(object sender, EventArgs e)
+        private void addCustomerB_Click(object sender, EventArgs e)
         {
-            var name = addPlayerNameTB.Text;
-            var cmd = new NpgsqlCommand($"INSERT INTO player (name) VALUES('{name}')", conn);
+            var name = addCustomerNameTB.Text;
+            var phone = addCustomerPhoneTB.Text;
+            var address = addCustomerAddressTB.Text;
+            var cmd = new NpgsqlCommand($"INSERT INTO customer (name, phone, address) VALUES('{name}', '{phone}', '{address}')", conn);
             cmd.ExecuteNonQuery();
-            updatePlayersUI();
+            updateCustomersUI();
         }
 
-        private void savePlayerB_Click(object sender, EventArgs e)
+        private void saveCustomerB_Click(object sender, EventArgs e)
         {
-            var player = (Player)playersLB.SelectedItem;
-            var name = editPlayerNameTB.Text;
-            var cmd = new NpgsqlCommand($"UPDATE player SET name='{name}' WHERE id = {player.id}", conn);
+            var customer = (Customer)customersLB.SelectedItem;
+            var name = editCustomerNameTB.Text;
+            var phone = editCustomerPhoneTB.Text;
+            var address = editCustomerAddressTB.Text;
+            var cmd = new NpgsqlCommand($"UPDATE customer SET name='{name}',phone='{phone}',address='{address}' WHERE id = {customer.id}", conn);
             cmd.ExecuteNonQuery();
-            updatePlayersUI();
+            updateCustomersUI();
         }
 
-        private void deletePlayerB_Click(object sender, EventArgs e)
+        private void deleteCustomerB_Click(object sender, EventArgs e)
         {
-            if (playersLB.SelectedIndex != -1)
+            if (customersLB.SelectedIndex != -1)
             {
-                var user = (Player)playersLB.SelectedItem;
-                var cmd = new NpgsqlCommand($"DELETE FROM users WHERE id = {user.id}", conn);
+                var user = (Customer)customersLB.SelectedItem;
+                var cmd = new NpgsqlCommand($"DELETE FROM customer WHERE id = {user.id}", conn);
                 cmd.ExecuteNonQuery();
-                updatePlayersUI();
+                updateCustomersUI();
             }
         }
 
-        private void playerPositionsLB_SelectedIndexChanged(object sender, EventArgs e)
+        private void customerBoughtCarsLB_SelectedIndexChanged(object sender, EventArgs e)
         {
-            deletePlayerPositionB.Enabled = playerPositionsLB.SelectedIndex != -1;
+            deleteCustomerBoughtCarB.Enabled = customerBoughtCarsLB.SelectedIndex != -1;
         }
 
-        private void addPlayerPositionB_Click(object sender, EventArgs e)
+        private void addCustomerBoughtCarB_Click(object sender, EventArgs e)
         {
-            var player = (Player)playersLB.SelectedItem;
-            var match = (Match)addPlayerPositionMatchCB.SelectedItem;
-            var position = addPlayerPositionNameTB.Text;
-            var cmd = new NpgsqlCommand($"INSERT INTO positions (player_id, match_id, position) VALUES({player.id}, {match.id}, '{position}')", conn);
+            var customer = (Customer)customersLB.SelectedItem;
+            var car = (Car)addCustomerBoughtCarCarCB.SelectedItem;
+            var price = addCustomerBoughtCarPriceNB.Value.ToString();
+            var cmd = new NpgsqlCommand($"INSERT INTO bought_cars (customer_id, car_id, price) VALUES({customer.id}, {car.id}, {price})", conn);
             try
             {
                 cmd.ExecuteNonQuery();
             }
             catch (PostgresException)
             {
-                MessageBox.Show("Ця позиція вже існує.", "Помилка");
+                MessageBox.Show("Ця покупка вже існує.", "Помилка");
             }
 
-            updatePlayerPositionsUI();
+            updateCustomerBoughtCarsUI();
         }
         
-        private void deletePlayerPositionB_Click(object sender, EventArgs e)
+        private void deleteCustomerBoughtCarB_Click(object sender, EventArgs e)
         {
-            var position = (Position)playerPositionsLB.SelectedItem;
-            var cmd = new NpgsqlCommand($"DELETE FROM positions WHERE player_id = {position.playerId} AND match_id={position.match.id}", conn);
+            var boughtCar = (BoughtCar)customerBoughtCarsLB.SelectedItem;
+            var cmd = new NpgsqlCommand($"DELETE FROM bought_cars WHERE customer_id = {boughtCar.customerId} AND car_id={boughtCar.car.id}", conn);
             cmd.ExecuteNonQuery();
-            updatePlayerPositionsUI();
+            updateCustomerBoughtCarsUI();
         }
 
-        private void stadiumsLB_SelectedIndexChanged(object sender, EventArgs e)
+        private void manufacturersLB_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (statiumsLB.SelectedIndex != -1)
+            if (manufacturersLB.SelectedIndex != -1)
             {
-                var author = (Stadium)statiumsLB.SelectedItem;
-                editStadiumNameTB.Text = author.name;
+                var manufacturer = (Manufacturer)manufacturersLB.SelectedItem;
+                editManufacturerNameTB.Text = manufacturer.name;
             }
-            deleteStadiumB.Enabled = statiumsLB.SelectedIndex != -1;
-            saveStadiumB.Enabled = statiumsLB.SelectedIndex != -1;
+            deleteManufacturerB.Enabled = manufacturersLB.SelectedIndex != -1;
+            saveManufacturerB.Enabled = manufacturersLB.SelectedIndex != -1;
         }
 
-        private void addStadiumB_Click(object sender, EventArgs e)
+        private void addManufacturerB_Click(object sender, EventArgs e)
         {
-            var name = addStadiumNameTB.Text;
-            var cmd = new NpgsqlCommand($"INSERT INTO stadium (name) VALUES('{name}')", conn);
+            var name = addManufacturerNameTB.Text;
+            var cmd = new NpgsqlCommand($"INSERT INTO manufacturer (name) VALUES('{name}')", conn);
             cmd.ExecuteNonQuery();
-            updateStadiumsUI();
+            updateManufacturersUI();
         }
 
-        private void saveStadiumB_Click(object sender, EventArgs e)
+        private void saveManufacturerB_Click(object sender, EventArgs e)
         {
-            var stadium = (Stadium)statiumsLB.SelectedItem;
-            var name = editStadiumNameTB.Text;
-            var cmd = new NpgsqlCommand($"UPDATE stadium SET name='{name}' WHERE id = {stadium.id}", conn);
+            var manufacturer = (Manufacturer)manufacturersLB.SelectedItem;
+            var name = editManufacturerNameTB.Text;
+            var cmd = new NpgsqlCommand($"UPDATE manufacturer SET name='{name}' WHERE id = {manufacturer.id}", conn);
             cmd.ExecuteNonQuery();
-            updateStadiumsUI();
+            updateManufacturersUI();
         }
 
-        private void deleteStadiumB_Click(object sender, EventArgs e)
+        private void deleteManufacturerB_Click(object sender, EventArgs e)
         {
-            if (statiumsLB.SelectedIndex != -1)
+            if (manufacturersLB.SelectedIndex != -1)
             {
-                var stadium = (Stadium)statiumsLB.SelectedItem;
-                var cmd = new NpgsqlCommand($"DELETE FROM stadium WHERE id = {stadium.id}", conn);
+                var manufacturer = (Manufacturer)manufacturersLB.SelectedItem;
+                var cmd = new NpgsqlCommand($"DELETE FROM manufacturer WHERE id = {manufacturer.id}", conn);
                 cmd.ExecuteNonQuery();
-                updateStadiumsUI();
-                updateMatchesUI();
+                updateManufacturersUI();
+                updateCarsUI();
             }
         }
 
-        private void matchesLB_SelectedIndexChanged(object sender, EventArgs e)
+        private void carsLB_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (matchesLB.SelectedIndex != -1)
+            if (carsLB.SelectedIndex != -1)
             {
-                var match = (Match)matchesLB.SelectedItem;
-                editMatchTeam1TB.Text = match.team1;
-                editMatchTeam2TB.Text = match.team2;
-                editMatchStadiumCB.SelectedIndex = stadiums.FindIndex((v) => v.id == match.stadium_id);
+                var car = (Car)carsLB.SelectedItem;
+                editCarNameTB.Text = car.name;
+                editCarManufacturerCB.SelectedIndex = manufacturers.FindIndex((v) => v.id == car.manufacturer_id);
             }
-            deleteMatchB.Enabled = matchesLB.SelectedIndex != -1;
-            saveMatchB.Enabled = matchesLB.SelectedIndex != -1;
+            deleteCarB.Enabled = carsLB.SelectedIndex != -1;
+            saveCarB.Enabled = carsLB.SelectedIndex != -1;
         }
 
-        private void addMatchB_Click(object sender, EventArgs e)
+        private void addCarB_Click(object sender, EventArgs e)
         {
-            var team1 = addMatchTeam1TB.Text;
-            var team2 = addMatchTeam2TB.Text;
-            var stadium = (Stadium)addMatchStadiumCB.SelectedItem;
-            var cmd = new NpgsqlCommand($"INSERT INTO match (team1, team2, stadium_id) VALUES('{team1}', '{team2}', {stadium.id})", conn);
+            var name = addCarNameTB.Text;
+            var manufacturer = (Manufacturer)addCarManufacturerCB.SelectedItem;
+            var cmd = new NpgsqlCommand($"INSERT INTO car (name, manufacturer_id) VALUES('{name}', {manufacturer.id})", conn);
             cmd.ExecuteNonQuery();
-            updateMatchesUI();
+            updateCarsUI();
         }
 
-        private void deleteMatchB_Click(object sender, EventArgs e)
+        private void deleteCarB_Click(object sender, EventArgs e)
         {
-            if (matchesLB.SelectedIndex != -1)
+            if (carsLB.SelectedIndex != -1)
             {
-                var match = (Match)matchesLB.SelectedItem;
-                var cmd = new NpgsqlCommand($"DELETE FROM match WHERE id = {match.id}", conn);
+                var car = (Car)carsLB.SelectedItem;
+                var cmd = new NpgsqlCommand($"DELETE FROM car WHERE id = {car.id}", conn);
                 cmd.ExecuteNonQuery();
-                updateMatchesUI();
-                updatePlayerPositionsUI();
+                updateCarsUI();
+                updateCustomerBoughtCarsUI();
             }
         }
 
-        private void saveMatchB_Click(object sender, EventArgs e)
+        private void saveCarB_Click(object sender, EventArgs e)
         {
-            var match = (Match)matchesLB.SelectedItem;
-            var team1 = editMatchTeam1TB.Text;
-            var team2 = editMatchTeam2TB.Text;
-            var stadium = (Stadium)editMatchStadiumCB.SelectedItem;
-            var cmd = new NpgsqlCommand($"UPDATE match SET team1='{team1}', team2='{team2}', stadium_id={stadium.id} WHERE id = {match.id}", conn);
+            var car = (Car)carsLB.SelectedItem;
+            var name = editCarNameTB.Text;
+            var manufacturer = (Manufacturer)editCarManufacturerCB.SelectedItem;
+            var cmd = new NpgsqlCommand($"UPDATE car SET name='{name}', manufacturer_id={manufacturer.id} WHERE id = {car.id}", conn);
             cmd.ExecuteNonQuery();
-            updateMatchesUI();
+            updateCarsUI();
         }
 
         private void callProcedureB_Click(object sender, EventArgs e)
@@ -199,62 +202,62 @@ namespace Football
             var procName = proceduresCB.SelectedItem.ToString();
             var cmd = new NpgsqlCommand($"CALL {procName}()", conn);
             cmd.ExecuteNonQuery();
-            updatePlayersUI();
-            updatePlayerPositionsUI();
-            updateMatchesUI();
-            updateStadiumsUI();
+            updateCustomersUI();
+            updateCustomerBoughtCarsUI();
+            updateCarsUI();
+            updateManufacturersUI();
         }
 
-        void updateMatchesUI()
+        void updateCarsUI()
         {
-            matches = loadMatches();
+            cars = loadCars();
 
-            var selectedMatchId = ((Match)matchesLB.SelectedItem)?.id ?? -1;
-            matchesLB.Items.Clear();
-            matchesLB.Items.AddRange(matches.ToArray());
-            matchesLB.SelectedIndex = matches.FindIndex((v) => v.id == selectedMatchId);
-            deleteMatchB.Enabled = matchesLB.SelectedIndex != -1;
-            saveMatchB.Enabled = matchesLB.SelectedIndex != -1;
+            var selectedCarId = ((Car)carsLB.SelectedItem)?.id ?? -1;
+            carsLB.Items.Clear();
+            carsLB.Items.AddRange(cars.ToArray());
+            carsLB.SelectedIndex = cars.FindIndex((v) => v.id == selectedCarId);
+            deleteCarB.Enabled = carsLB.SelectedIndex != -1;
+            saveCarB.Enabled = carsLB.SelectedIndex != -1;
 
-            addPlayerPositionMatchCB.Items.Clear();
-            addPlayerPositionMatchCB.Items.AddRange(matches.ToArray());
-            addPlayerPositionMatchCB.SelectedIndex = addPlayerPositionMatchCB.Items.Count > 0 ? 0 : -1;
+            addCustomerBoughtCarCarCB.Items.Clear();
+            addCustomerBoughtCarCarCB.Items.AddRange(cars.ToArray());
+            addCustomerBoughtCarCarCB.SelectedIndex = addCustomerBoughtCarCarCB.Items.Count > 0 ? 0 : -1;
         }
 
-        void updateStadiumsUI()
+        void updateManufacturersUI()
         {
-            stadiums = loadStadiums();
+            manufacturers = loadManufacturers();
 
-            var selectedStadiumId = ((Stadium)statiumsLB.SelectedItem)?.id ?? -1;
-            statiumsLB.Items.Clear();
-            statiumsLB.Items.AddRange(stadiums.ToArray());
-            statiumsLB.SelectedIndex = stadiums.FindIndex((v) => v.id == selectedStadiumId);
-            deleteStadiumB.Enabled = statiumsLB.SelectedIndex != -1;
-            saveStadiumB.Enabled = statiumsLB.SelectedIndex != -1;
+            var selectedManufacturerId = ((Manufacturer)manufacturersLB.SelectedItem)?.id ?? -1;
+            manufacturersLB.Items.Clear();
+            manufacturersLB.Items.AddRange(manufacturers.ToArray());
+            manufacturersLB.SelectedIndex = manufacturers.FindIndex((v) => v.id == selectedManufacturerId);
+            deleteManufacturerB.Enabled = manufacturersLB.SelectedIndex != -1;
+            saveManufacturerB.Enabled = manufacturersLB.SelectedIndex != -1;
 
-            editMatchStadiumCB.Items.Clear();
-            editMatchStadiumCB.Items.AddRange(stadiums.ToArray());
-            editMatchStadiumCB.SelectedIndex = editMatchStadiumCB.Items.Count > 0 ? 0 : -1;
+            editCarManufacturerCB.Items.Clear();
+            editCarManufacturerCB.Items.AddRange(manufacturers.ToArray());
+            editCarManufacturerCB.SelectedIndex = editCarManufacturerCB.Items.Count > 0 ? 0 : -1;
 
-            addMatchStadiumCB.Items.Clear();
-            addMatchStadiumCB.Items.AddRange(stadiums.ToArray());
-            addMatchStadiumCB.SelectedIndex = addMatchStadiumCB.Items.Count > 0 ? 0 : -1;
+            addCarManufacturerCB.Items.Clear();
+            addCarManufacturerCB.Items.AddRange(manufacturers.ToArray());
+            addCarManufacturerCB.SelectedIndex = addCarManufacturerCB.Items.Count > 0 ? 0 : -1;
         }
 
-        void updatePlayersUI()
+        void updateCustomersUI()
         {
-            var selected = (Player)playersLB.SelectedItem;
+            var selected = (Customer)customersLB.SelectedItem;
             int selectedIndex = -1;
             int i = 0;
 
-            var cmd = new NpgsqlCommand("SELECT * FROM player", conn);
+            var cmd = new NpgsqlCommand("SELECT * FROM customer", conn);
             var reader = cmd.ExecuteReader();
-            playersLB.Items.Clear();
+            customersLB.Items.Clear();
 
             while (reader.Read())
             {
                 var id = reader.GetInt32(0);
-                playersLB.Items.Add(new Player(id, reader.GetString(1)));
+                customersLB.Items.Add(new Customer(id, reader.GetString(1), reader.GetString(2), reader.GetString(3)));
 
                 if (selected != null && selected.id == id)
                 {
@@ -264,53 +267,53 @@ namespace Football
             }
             reader.Close();
 
-            playersLB.SelectedIndex = selectedIndex;
-            deletePlayerB.Enabled = playersLB.SelectedIndex != -1;
-            savePlayerB.Enabled = playersLB.SelectedIndex != -1;
-            addPlayerPositionB.Enabled = playersLB.SelectedIndex != -1;
+            customersLB.SelectedIndex = selectedIndex;
+            deleteCustomerB.Enabled = customersLB.SelectedIndex != -1;
+            saveCustomerB.Enabled = customersLB.SelectedIndex != -1;
+            addCustomerBoughtCarB.Enabled = customersLB.SelectedIndex != -1;
         }
 
-        List<Stadium> loadStadiums()
+        List<Manufacturer> loadManufacturers()
         {
-            var stadiums = new List<Stadium>();
-            var cmd = new NpgsqlCommand($"SELECT * FROM stadium", conn);
+            var manufacturers = new List<Manufacturer>();
+            var cmd = new NpgsqlCommand($"SELECT * FROM manufacturer", conn);
             var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                stadiums.Add(new Stadium(reader.GetInt32(0), reader.GetString(1)));
+                manufacturers.Add(new Manufacturer(reader.GetInt32(0), reader.GetString(1)));
             }
             reader.Close();
-            return stadiums;
+            return manufacturers;
         }
 
-        List<Match> loadMatches()
+        List<Car> loadCars()
         {
-            var matches = new List<Match>();
-            var cmd = new NpgsqlCommand($"SELECT * FROM match", conn);
+            var cars = new List<Car>();
+            var cmd = new NpgsqlCommand($"SELECT * FROM car", conn);
             var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                matches.Add(new Match(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetInt32(3)));
+                cars.Add(new Car(reader.GetInt32(0), reader.GetString(1), reader.GetInt32(2)));
             }
             reader.Close();
-            return matches;
+            return cars;
         }
 
-        void updatePlayerPositionsUI()
+        void updateCustomerBoughtCarsUI()
         {
-            playerPositionsLB.Items.Clear();
-            Player player = (Player)playersLB.SelectedItem;
+            customerBoughtCarsLB.Items.Clear();
+            Customer customer = (Customer)customersLB.SelectedItem;
 
-            if (player != null)
+            if (customer != null)
             {
-                var cmd = new NpgsqlCommand($"SELECT * FROM positions WHERE player_id = {player.id}", conn);
+                var cmd = new NpgsqlCommand($"SELECT * FROM bought_cars WHERE customer_id = {customer.id}", conn);
                 var reader = cmd.ExecuteReader();
 
                 while (reader.Read())
                 {
-                    var match_id = reader.GetInt32(1);
-                    var match = matches.Find((v) => v.id == match_id);
-                    playerPositionsLB.Items.Add(new Position(reader.GetInt32(0), match, reader.GetString(2)));
+                    var car_id = reader.GetInt32(1);
+                    var car = cars.Find((v) => v.id == car_id);
+                    customerBoughtCarsLB.Items.Add(new BoughtCar(reader.GetInt32(0), car, reader.GetDecimal(2)));
                 }
                 reader.Close();
             }

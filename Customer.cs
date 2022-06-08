@@ -4,17 +4,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Football
+namespace CarStore
 {
-    internal class Player
+    internal class Customer
     {
         public int id;
-        public String name;
+        public string name;
+        public string phone;
+        public string address;
 
-        public Player(int id, String name)
+        public Customer(int id, string name, string phone, string address)
         {
             this.id = id;
             this.name = name;
+            this.phone = phone;
+            this.address = address;
         }
 
         public override string ToString()

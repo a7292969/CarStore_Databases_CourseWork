@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Football.Properties
+namespace CarStore.Properties
 {
 
 
