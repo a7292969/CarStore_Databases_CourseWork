@@ -581,7 +581,7 @@
             this.proceduresCB.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.proceduresCB.FormattingEnabled = true;
             this.proceduresCB.Items.AddRange(new object[] {
-            "remove_inactive_users",
+            "remove_inactive_customers",
             "drop_all_data"});
             this.proceduresCB.Location = new System.Drawing.Point(350, 481);
             this.proceduresCB.Name = "proceduresCB";

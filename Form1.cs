@@ -76,8 +76,8 @@ namespace CarStore
         {
             if (customersLB.SelectedIndex != -1)
             {
-                var user = (Customer)customersLB.SelectedItem;
-                var cmd = new NpgsqlCommand($"DELETE FROM customer WHERE id = {user.id}", conn);
+                var customer = (Customer)customersLB.SelectedItem;
+                var cmd = new NpgsqlCommand($"DELETE FROM customer WHERE id = {customer.id}", conn);
                 cmd.ExecuteNonQuery();
                 updateCustomersUI();
             }
